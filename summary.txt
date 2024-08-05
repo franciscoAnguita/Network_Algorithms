@@ -1,4 +1,0 @@
-Node: br1_1, Neighbors: S++_2, Num Neighbors: 1
-Node: br1_2, Neighbors: S++_2, S++_1, Num Neighbors: 2
-Node: S++_1, Neighbors: br1_2, S++_2, Num Neighbors: 2
-Node: S++_2, Neighbors: br1_2, br1_1, S++_1, Num Neighbors: 3

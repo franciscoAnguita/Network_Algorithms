@@ -1,5 +1,0 @@
-Elapsed time for S++ with 2 agents: 0.17 seconds
-Elapsed time for S with 2 agents: 0.19 seconds
-Elapsed time for S++ with 3 agents: 0.27 seconds
-Elapsed time for S with 3 agents: 0.28 seconds
-Total elapsed time: 0.91 seconds
