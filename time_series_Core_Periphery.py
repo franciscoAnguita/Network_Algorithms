@@ -199,8 +199,8 @@ def main():
     # plot_metric_line('core_periphery_coefficient', 'Core-Periphery Coefficient over Iterations',metrics_df)
     
     plot_metric_line('scc_size', 'SCC Size over Iterations',metrics_df) # NOT WORKING
-    plot_metric_line('in_size', 'In Component Size over Iterations',metrics_df)
-    plot_metric_line('out_size', 'Out Component Size over Iterations',metrics_df)
+    # plot_metric_line('in_size', 'In Component Size over Iterations',metrics_df)
+    # plot_metric_line('out_size', 'Out Component Size over Iterations',metrics_df)
     plot_metric_line('other_size', 'Other Component Size over Iterations', metrics_df)
    
 
