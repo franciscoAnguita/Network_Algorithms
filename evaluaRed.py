@@ -100,13 +100,13 @@ def readLogFile(G: nx.Graph, node1: str, node2: str, weight: int, defections: di
 
     # Record cooperation
     cooperations[(node1, node2)] = (last_action_player1 == 0 and last_action_player2 == 0)
-    # print('EVALUARED - cooperations', cooperations)
+    
 
     return round(weight,1)
 
 
 
-def evaluaRed(G: nx.Graph, type_of_game: str = "prisoners", iters: int = 5, numSamp: int = 1) -> dict:
+def evaluaRed(G: nx.Graph, type_of_game: str = "prisoners", iters: int = 10, numSamp: int = 1) -> dict:
     '''  '''
     remove_files_from_folder("../log")
     cooperations = {}

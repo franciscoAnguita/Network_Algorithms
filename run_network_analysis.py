@@ -36,7 +36,8 @@ def run_network_analysis(num_agents, skill_type, num_networks=5, iterationsTot=2
             "density": [],
             "assortativity": [],
             "modularity": [],
-            "edge_weight": []
+            "edge_weight": [],
+            "conneceted_nodes": []
             }
     
 
@@ -56,12 +57,13 @@ def run_network_analysis(num_agents, skill_type, num_networks=5, iterationsTot=2
             "density": [],
             "assortativity": [],
             "modularity": [],
-            "edge_weight": []
+            "edge_weight": [],
+            "conneceted_nodes": []
         }
 
         print(f'NETWORK {run + 1}/{num_networks}')
         G = configuraRed(configuration)
-        # pos = nx.get_node_attributes(G, 'pos')    
+        pos = nx.get_node_attributes(G, 'pos')    
         # generateImage(G, 0, pos)
 
         for iter in range(0, iterationsTot):
@@ -139,18 +141,23 @@ def run_network_analysis(num_agents, skill_type, num_networks=5, iterationsTot=2
                     modularity = float('nan')
                     print(f"RuntimeWarning during community detection: {e}")
 
+            # conneceted_nodes = summarize_connected_nodes(G)
+
             if nx.is_connected(G):
                 metrics["average_path_length"].append(nx.average_shortest_path_length(G))
             else:
                 metrics["average_path_length"].append(float('inf'))  # or another measure for disconnected graphs
+
             metrics["degree_distribution"].append([d for n, d in G.degree()])
             metrics["degree_histogram"].append(nx.degree_histogram(G))
-            metrics["cooperation_proportion"].append(measure_cooperation(cooperations))
+            metrics["cooperation_proportion"].append(measure_cooperation(cooperations, G))
             metrics["clustering_coefficient"].append(nx.average_clustering(G))
             metrics["assortativity"].append(assortativity)
             metrics["modularity"].append(modularity)
             metrics["density"].append(density)
             metrics["edge_weight"].append(edge_weights)
+            # metrics["conneceted_nodes"].append(conneceted_nodes)
+            
 
             coop_proportion = metrics["cooperation_proportion"]
             network_tipping_points = detect_tipping_points(coop_proportion)

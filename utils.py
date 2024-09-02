@@ -255,10 +255,11 @@ def create_folder_if_not_exists(folder_path):
         os.makedirs(folder_path)
 
 
-def measure_cooperation(cooperations: dict) -> float:
-    total_interactions = len(cooperations)
+def measure_cooperation(cooperations: dict, G) -> float:
+
+    total_edges = G.number_of_edges()  
     cooperative_interactions = sum(1 for coop in cooperations.values() if coop)
-    return cooperative_interactions / total_interactions if total_interactions > 0 else 0
+    return cooperative_interactions / total_edges if total_edges > 0 else 0
 
 
 
@@ -938,7 +939,7 @@ def save_metrics_to_csv(results):
     ]
 
     # Open the CSV file for writing
-    with open('results.csv', 'w', newline='') as csvfile:
+    with open('results_test.csv', 'w', newline='') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
 

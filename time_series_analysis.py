@@ -613,17 +613,17 @@ def main(file_path):
     # perform_granger_causality_test(df, 'cooperation_proportion', 'clustering_coefficient', stage_count)
     
     plot_measurement(df, 'cooperation_proportion', stage_count, 'Cooperation Proportion' )
-    plot_measurement(df, 'clustering_coefficient', stage_count,'Clustering Coefficient' )
-    plot_measurement(df, 'average_path_length', stage_count, 'Average Path Length')
-    plot_measurement(df, 'density', stage_count, 'Density')
-    plot_measurement(df, 'assortativity', stage_count, 'Assortativity')
-    plot_measurement(df, 'modularity', stage_count, 'Modularity')
+    # plot_measurement(df, 'clustering_coefficient', stage_count,'Clustering Coefficient' )
+    # plot_measurement(df, 'average_path_length', stage_count, 'Average Path Length')
+    # plot_measurement(df, 'density', stage_count, 'Density')
+    # plot_measurement(df, 'assortativity', stage_count, 'Assortativity')
+    # plot_measurement(df, 'modularity', stage_count, 'Modularity')
 
     # for anova and tipping points we create two new variables (intelligence -low,high- and group size -low, high-)
     df = preprocess_data(df) 
+    df.to_csv('results_time_series.csv', index=False)
        
- 
-    # Tipping points
+     # Tipping points
     df_melt, tipping_points_df = identify_tipping_points(df,stage_count)
     plot_tipping_points(df_melt,tipping_points_df)
     # plot_tipping_points_Skill_Num(df_melt, tipping_points_df)
@@ -635,9 +635,8 @@ def main(file_path):
     print(tukey_results)
 
 
-# Example usage
 if __name__ == "__main__":
     # file_path = 'combined_results500.csv'  # Update this path to your actual CSV file path
-    file_path = 'results3.csv'  # Update this path to your actual CSV file path - this one is the original csv file.
+    file_path = 'results.csv'  # Update this path to your actual CSV file path - this one is the original csv file.
     # file_path = 'results_COpy.csv'  # Update this path to your actual CSV file path - this one is the original csv file.
     main(file_path)

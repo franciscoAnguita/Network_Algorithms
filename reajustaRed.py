@@ -24,6 +24,15 @@ import copy
 
 def reajustaRed(G: nx.Graph, iterationsTot: int, cooperations: dict, proximity_factor: float) -> nx.Graph: # base_probability: float = 0.1
     
+    """
+    Adjusts the network graph G based on the history of cooperation and defection between nodes.
+    
+    :param G: The input network graph
+    :param iterationsTot: Total number of iterations in the simulation
+    :param cooperations: Dictionary tracking historical cooperations between node pairs
+    :param proximity_factor: Factor controlling the likelihood of interaction based on proximity
+    :return: The adjusted network graph
+    """
     
     # Helper function to get node distance (or proximity)
     def node_distance(node1, node2):
@@ -54,26 +63,65 @@ def reajustaRed(G: nx.Graph, iterationsTot: int, cooperations: dict, proximity_f
                     # print('REAJUSTARED - has edge', edge)
                     if G[edge[0]][edge[1]]["weight"] < 9.4:
                         G.remove_edge(edge[0], edge[1])
-                        if defections1 >= 3 or defections2 >= 3:
-                            permanently_removed_edges.add(edge)
+                        permanently_removed_edges.add(edge)
+                        # if defections1 >= 3 or defections2 >= 3:
+                            
 
-                elif (defections1 < 3 and defections2 < 3 and random.random() <= interaction_prob):
-                    # if (node1, node2) not in permanently_removed_edges and (node2, node1) not in permanently_removed_edges:
-                    probability = 0.5  # Default probability
+                # elif (defections1 < 3 and defections2 < 3 and random.random() <= interaction_prob):
+                #     # if (node1, node2) not in permanently_removed_edges and (node2, node1) not in permanently_removed_edges:
+                #     probability = 0.5  # Default probability
 
-                    if previous_cooperations > 0:
-                        probability += 0.9
+                #     if previous_cooperations > 0:
+                #         probability += 0.9
 
-                    if random.random() < probability:
-                        G.add_edge(node1, node2, weight=10)
+                #     if random.random() < probability:
+                #         G.add_edge(node1, node2, weight=10)
 
                     # if previous_cooperations:
                     #     coop_count = sum(cooperations.get((node1, node2), 0) for _ in range(iterationsTot))
                     #     if coop_count >= 1: 
                     #         probability = 1
                     
+                elif (defections1 < 3 and defections2 < 3 and random.random() <= interaction_prob):
 
+                    if (node1, node2) not in permanently_removed_edges:
+                        probability = 0.5 + (0.9 * previous_cooperations / iterationsTot)
+
+                        if random.random() < probability:
+                            G.add_edge(node1, node2, weight=10)
+    
     return G
     
 
 
+def reajustaRe(G: nx.Graph, iterationsTot: int, cooperations: dict, proximity_factor: float) -> nx.Graph: # base_probability: float = 0.1
+    
+    # Helper function to get node distance (or proximity)
+    def node_distance(node1, node2):
+        pos = copy.deepcopy(nx.get_node_attributes(G, 'pos'))
+        pos1 = pos[node1]
+        pos2 = pos[node2]
+        return ((pos1[0] - pos2[0])**2 + (pos1[1] - pos2[1])**2)**0.5
+
+     # Set of permanently removed edges
+    permanently_removed_edges = set()
+
+    for node1 in G.nodes:
+        for node2 in G.nodes:
+            if node1 != node2:
+                # Calculate the probability of interaction based on distance
+                interaction_prob = min(proximity_factor / node_distance(node1, node2), 1.0)
+                probability = 0.5
+               
+                if G.has_edge(node1, node2):
+                    edge = (node1, node2) if G[node1][node2] else (node2, node1)
+                    if random.random() < probability:
+                        G.remove_edge(edge[0], edge[1])
+                                        
+                elif random.random() < probability and random.random() <= interaction_prob:                    
+                    G.add_edge(node1, node2, weight=10)
+
+                # elif (node1, node2) not in permanently_removed_edges and  random.random() <= interaction_prob:                    
+                #     G.add_edge(node1, node2, weight=10)
+
+    return G
