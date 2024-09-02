@@ -1,0 +1,7 @@
+# ignoramos todo archivo generado por una ejecución de nuestro programa.
+generated*/
+
+# Excluimos todo csv (estos no tienen valor en la ejecución del programa)
+*.csv
+*.txt
+ 
