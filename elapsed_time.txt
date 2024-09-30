@@ -1,2 +1,5 @@
-Elapsed time for S++ with 40 agents: 433.46 seconds
-Total elapsed time: 433.46 seconds
+Elapsed time for exp3w++ with 100 agents: 6367.55 seconds
+Elapsed time for exp3w++ with 75 agents: 2337.68 seconds
+Elapsed time for exp3w++ with 50 agents: 3702.05 seconds
+Elapsed time for exp3w++ with 25 agents: 734.50 seconds
+Total elapsed time: 13141.81 seconds

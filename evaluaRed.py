@@ -15,15 +15,18 @@ def adjust_node_positions(G: nx.Graph, node1: str, node2: str, factor: float, ac
     displacement = (np.linalg.norm(edge_vector) - new_distance ) / 2  # Divide by 2 to split displacement evenly between the two nodes
        
     # Normalize the edge vector to get the direction --> RuntimeWarning: invalid value encountered in divide
-    direction = edge_vector / np.linalg.norm(edge_vector)
+    # We add a small epsilon to prevent from zero division, meaning that node1 is physically in the position of node2
+    norm = np.linalg.norm(edge_vector) + 1e-9  
+    direction = edge_vector / norm
+
     
     # Update node positions
     if action =='expand':
         positions[node1] -= direction * displacement
         positions[node2] += direction * displacement
     if action =='shrink':
-        positions[node1] -= direction * displacement
-        positions[node2] += direction * displacement
+        positions[node1] += direction * displacement
+        positions[node2] -= direction * displacement
 
     nx.set_node_attributes(G, positions, 'pos')
     
@@ -50,7 +53,32 @@ def adjust_edge_widths(G, positions, ax):
 
 
 
-def readLogFile(G: nx.Graph, node1: str, node2: str, weight: int, defections: dict, coops: dict, cooperations: dict, type_of_game: str) -> float: #, interaction: dict,  
+def calculate_reputation(node, interaction_counts, cooperation_counts):
+
+    interactions = interaction_counts.get(node, 0)
+    cooperations = cooperation_counts.get(node, 0)
+    
+    if interactions > 0:
+        reputation = cooperations / interactions
+    else:
+        reputation = 0  # No interactions yet
+    
+    return reputation
+
+
+
+def readLogFile(G: nx.Graph, 
+                node1: str, 
+                node2: str, 
+                weight: int, 
+                defections: dict, 
+                coops: dict, 
+                edge_cooperations: dict, 
+                type_of_game: str,
+                interaction_counts: dict,  # Added to track history
+                cooperation_counts: dict   # Added to track reputation
+                ) -> float: #, interaction: dict,  
+    
     
     file_name = f"{type_of_game}_{node1}_{node2}.txt"
     logPath = "../log"
@@ -69,6 +97,39 @@ def readLogFile(G: nx.Graph, node1: str, node2: str, weight: int, defections: di
             last_action_player1 = int(columns[0])
             last_action_player2 = int(columns[1])
 
+    
+    # Update interaction counts (for history)
+    interaction_counts[node1] = interaction_counts.get(node1, 0) + 1
+    interaction_counts[node2] = interaction_counts.get(node2, 0) + 1
+
+
+    if last_action_player1 == 1 or last_action_player2 == 1.05:
+        weight -= 0.3  # Adjust as needed   
+        adjust_node_positions(G, node1, node2, factor=1, action='expand')     
+        
+        if last_action_player1 == 1:
+            defections[(node1, node2)] = defections.get((node1, node2), 0) + 1
+           
+        if last_action_player2 == 1:
+            defections[(node2, node1)] = defections.get((node2, node1), 0) + 1
+
+
+                
+    if last_action_player1 == 0 and last_action_player2 == 0:
+        weight += 0.3  # Adjust as needed
+        adjust_node_positions(G, node1, node2, factor=0.95, action= 'shrink') 
+
+    if last_action_player1 == 0:
+        coops[(node1, node2)] = coops.get((node1, node2), 0) + 1
+        cooperation_counts[node1] = cooperation_counts.get(node1, 0) + 1 # Track cooperations for reputation
+
+    if last_action_player2 == 0:
+        coops[(node2, node1)] = coops.get((node2, node1), 0) + 1
+        cooperation_counts[node2] = cooperation_counts.get(node2, 0) + 1 # Track cooperations for reputation
+
+    # Record cooperation
+    edge_cooperations[(node1, node2)] = (last_action_player1 == 0 and last_action_player2 == 0)
+
     # # Update interaction table
     # if node1 not in interaction:
     #     interaction[node1] = {}
@@ -77,52 +138,60 @@ def readLogFile(G: nx.Graph, node1: str, node2: str, weight: int, defections: di
         
     # interaction[node1][node2] = last_action_player1
     # interaction[node2][node1] = last_action_player2
-
-    if last_action_player1 == 1 or last_action_player2 == 1:
-        weight -= 0.3  # Adjust as needed   
-        adjust_node_positions(G, node1, node2, factor=1, action='expand')     
-        
-        if last_action_player1 == 1:
-            defections[(node1, node2)] += 1
-           
-        if last_action_player2 == 1:
-            defections[(node2, node1)] += 1
-                
-    if last_action_player1 == 0 and last_action_player2 == 0:
-        weight += 0.3  # Adjust as needed
-        adjust_node_positions(G, node1, node2, factor=0.90, action= 'shrink') 
-
-    if last_action_player1 == 0:
-            coops[(node1, node2)] += 1
-
-    if last_action_player2 == 0:
-        coops[(node2, node1)] += 1
-
-    # Record cooperation
-    cooperations[(node1, node2)] = (last_action_player1 == 0 and last_action_player2 == 0)
     
 
-    return round(weight,1)
+    return round(weight,1), interaction_counts, cooperation_counts, edge_cooperations
 
 
 
-def evaluaRed(G: nx.Graph, type_of_game: str = "prisoners", iters: int = 10, numSamp: int = 1) -> dict:
-    '''  '''
-    remove_files_from_folder("../log")
-    cooperations = {}
+def evaluaRed(G: nx.Graph, 
+              interaction_counts: dict, 
+              cooperation_counts: dict, 
+              reputation: dict,
+              defections: dict,
+              coops: dict,
+              edge_cooperations,
+              type_of_game: str = "prisoners", iters: int = 10, numSamp: int = 1) -> dict:
+    
+    
+    remove_files_from_folder("../log")    
+    
+    
     for edge in G.edges:
+
         node1, node2 = edge
+
+        # Calculate the reputation and history for node1 and node2 before running the game
+        reputation[node1] = calculate_reputation(node1, interaction_counts, cooperation_counts)
+        reputation[node2] = calculate_reputation(node2, interaction_counts, cooperation_counts)
+        
+        
+        # Set history flag based on defections between nodes
+        history = 0
+        if defections.get((node1, node2), 0) > 1:
+            history = 1
+        if defections.get((node2, node1), 0) > 1:
+            history = 1
+        
+
         # print('EVALUARED 1, coops', G.graph["coops"])
-        command = f'./game {type_of_game} {node1} {node2} {iters} {numSamp}' # Placeholder for game type
+        # command = f'./game {type_of_game} {node1} {node2} {iters} {numSamp}' # Placeholder for game type
+        command = f'./game {type_of_game} {node1} {node2} {iters} {numSamp} {history}' # Placeholder for game type
         subprocess.call(command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) # stdout y err están silenciados
-        weight = readLogFile(G, node1, node2, G[node1][node2]["weight"], G.graph["defections"], G.graph["coops"], cooperations, type_of_game) #, G.graph["interactions"], 
+        # weight = readLogFile(G, node1, node2, G[node1][node2]["weight"], defections, coops, cooperations, type_of_game, interaction_counts, cooperation_counts)
+        
+        weight, interaction_counts, cooperation_counts, edge_cooperations = readLogFile(G, node1, node2, G[node1][node2]["weight"], 
+                                                                    G.graph["defections"], 
+                                                                    G.graph["coops"], 
+                                                                    edge_cooperations, 
+                                                                    type_of_game, 
+                                                                    interaction_counts, 
+                                                                    cooperation_counts) #, G.graph["interactions"], 
+                                                    
         G[node1][node2]["weight"] = weight
         
-        # print('')
-        # print('EVALUARED 2, cooperations', cooperations)
-        # print('EVALUARED, weight', weight)
-        # print('')
     
-    return nx.get_edge_attributes(G, "weight"), G.graph["defections"], G.graph["coops"], cooperations #, G.graph["interactions"], 
+    return nx.get_edge_attributes(G, "weight"), G.graph["defections"], G.graph["coops"], edge_cooperations, reputation, interaction_counts, cooperation_counts#, G.graph["interactions"], 
+                                   
 
 

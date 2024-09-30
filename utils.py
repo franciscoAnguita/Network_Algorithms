@@ -229,7 +229,7 @@ def generateGif(iter: int):
     # nImages = len(os.listdir(f"./generatedImages/Network{networkNum}"))
     # print('UTILS - nImages', nImages)
     for iter in range(1, nImages):
-        for i in range(1,25):
+        for i in range(1,10):
             fileName = f"./generatedImages/Network{networkNum}/Random Network - Intermediate Frame {iter}-{i}.png"
             images.append(imageio.imread(fileName))
                        
@@ -259,7 +259,7 @@ def measure_cooperation(cooperations: dict, G) -> float:
 
     total_edges = G.number_of_edges()  
     cooperative_interactions = sum(1 for coop in cooperations.values() if coop)
-    return cooperative_interactions / total_edges if total_edges > 0 else 0
+    return (cooperative_interactions/2) / total_edges if total_edges > 0 else 0   # divide by 2 because we're counting (node1,node2) and (node2,node1)
 
 
 
@@ -447,15 +447,15 @@ def plot_all_combinations(df, metric, stage1, stage2, stage3,skills, number):
         else:
             plt.plot(temp_subset['iteration'], temp_subset[metric], alpha=0.2, color='grey', marker='o')
 
-    mean_metric = df.groupby('iteration')[metric].mean()
-    median_metric = df.groupby('iteration')[metric].median()
-    handle_mean, = plt.plot(mean_metric.index, mean_metric.values, label=f'Mean {metric.replace("_", " ").title()}', color='blue', linewidth=2)
-    handle_median, = plt.plot(median_metric.index, median_metric.values, label=f'Median {metric.replace("_", " ").title()}', color='red', linestyle='--', linewidth=2)
+    # mean_metric = df.groupby('iteration')[metric].mean()
+    # median_metric = df.groupby('iteration')[metric].median()
+    # handle_mean, = plt.plot(mean_metric.index, mean_metric.values, label=f'Mean {metric.replace("_", " ").title()}', color='blue', linewidth=2)
+    # handle_median, = plt.plot(median_metric.index, median_metric.values, label=f'Median {metric.replace("_", " ").title()}', color='red', linestyle='--', linewidth=2)
     
-    handles.append(handle_mean)
-    labels.append(f'Mean {metric.replace("_", " ").title()}')
-    handles.append(handle_median)
-    labels.append(f'Median {metric.replace("_", " ").title()}')
+    # handles.append(handle_mean)
+    # labels.append(f'Mean {metric.replace("_", " ").title()}')
+    # handles.append(handle_median)
+    # labels.append(f'Median {metric.replace("_", " ").title()}')
 
     handle_grey, = plt.plot([], [], color='grey', alpha=0.2, marker='o', label='Other Combinations')
     handles.append(handle_grey)
@@ -939,7 +939,7 @@ def save_metrics_to_csv(results):
     ]
 
     # Open the CSV file for writing
-    with open('results_test.csv', 'w', newline='') as csvfile:
+    with open('results_10-exp3w++_25_30iter.csv', 'w', newline='') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
 

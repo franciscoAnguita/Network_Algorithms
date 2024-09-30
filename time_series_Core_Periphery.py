@@ -241,21 +241,18 @@ def plot_metric_line(metric_name, title, metrics_df):
     # Filter the DataFrame to include only the selected network ID and skill type
     filtered_df = metrics_df[(metrics_df['network_id'] == selected_network_id) & 
                              (metrics_df['skill_type'] == selected_skill_type)]
-    
-    # Get unique numbers of agents for plotting
-    line_styles = ['-', '--', '-.', ':']
-
+   
     for idx, num_agents in enumerate(filtered_df['num_agents'].unique()):
         subset = filtered_df[filtered_df['num_agents'] == num_agents]
         subset = subset.sort_values(by='iteration')  # Sort by iteration to avoid looping lines
         
         # Plot the data
-        plt.plot(subset['iteration'], subset[metric_name], label=f'{selected_skill_type}, {num_agents} agents', linestyle=line_styles[idx % len(line_styles)], marker='o')
-
+        plt.plot(subset['iteration'], subset[metric_name], label=f'{selected_skill_type}, {num_agents} agents', linestyle= "-", marker='o')
+        
     plt.title(f"{title} (Network ID: {selected_network_id}, Skill Type: {selected_skill_type})")
     plt.xlabel('Iteration')
     plt.ylabel(metric_name)
-    plt.legend(title='Number of Agents')
+    plt.legend(title='Number of Agents', bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
     plt.grid(True)
     plt.show()
 
@@ -347,13 +344,14 @@ def plot_coreness_snapshots(graphs, iterations):
 
             # Draw the graph
             pos = nx.spring_layout(G)  # Positioning for visualization
-            core_nodes = [node for node, score in coreness.items() if score >= 0.5]
-            periphery_nodes = [node for node, score in coreness.items() if score < 0.5]
+            core_nodes = [node for node, score in coreness.items() if score >= 0.9]
+            intermediate_nodes = [node for node, score in coreness.items() if 0.1 <= score < 0.9]
+            periphery_nodes = [node for node, score in coreness.items() if score < 0.1]
 
             # Set edge properties
             edge_width = 1
             edge_color = 'grey'  # Set the edge color to grey
-            edge_alpha = 0.5     # Set the transparency of edges
+            edge_alpha = 0.3     # Set the transparency of edges
 
             # Draw nodes with black borders
             node_border_color = 'black'
@@ -361,6 +359,7 @@ def plot_coreness_snapshots(graphs, iterations):
             # Draw nodes and edges
             nx.draw_networkx_nodes(G, pos, nodelist=core_nodes, node_color='LightSkyBlue', edgecolors=node_border_color, ax=ax, label='Core')
             nx.draw_networkx_nodes(G, pos, nodelist=periphery_nodes, node_color='red', edgecolors=node_border_color, ax=ax, label='Periphery')
+            nx.draw_networkx_nodes(G, pos, nodelist=intermediate_nodes, node_color='green', edgecolors=node_border_color, ax=ax, label='Intermediate')
             nx.draw_networkx_edges(G, pos, ax=ax, width=edge_width, edge_color=edge_color, alpha=edge_alpha)
 
             ax.set_title(f'Network {network_id}, Iteration {iteration}')
@@ -373,7 +372,7 @@ def plot_coreness_snapshots(graphs, iterations):
 def main():
 
     # In the case we make our own data frame to evaluate
-    edge_df = pd.read_csv('edge_data_500_50.csv')   
+    edge_df = pd.read_csv('edge_data_S++_25-100_30_ASP.csv')   
     
     # results_df = pd.read_csv('records.csv')  
     # edge_df = convert_to_edgeDf(results_df)
@@ -428,7 +427,7 @@ def main():
     metrics_df = pd.DataFrame(all_metrics)
     metrics_df.to_csv('advanced_network_metrics.csv', index=False)
 
-    coreness_df = pd.DataFrame(coreness) 
+    # coreness_df = pd.DataFrame(coreness) 
 
     # PLOTS 1.  
     plot_metric_line('core_periphery_coefficient', 'Core-Periphery Coefficient over Iterations', metrics_df)

@@ -14,10 +14,10 @@ from time_series_analysis import split_multistage_values
 def main():
 
     overall_start_time = time.time()
-    num_networks = 1
-    iterationsTot = 40
-    num_agents_list = [40] #[400,300,200,100,50] #40,50,60,70,80,90,100,150,200,
-    skill_types = ["S++"] #,"manipulator-gf","random"]
+    num_networks = 10
+    iterationsTot = 30
+    num_agents_list = [100, 75, 50, 25] #40,50,60,70,80,90,100,150,200,
+    skill_types = ["exp3w++"] # ,"exp3w++", "S++_simp", "eeew++", "manipulator-gf","random",, "ucbw++"]
     
     # ["S++", "S", "br2", "manipulator-gf", "eeew_simp", "gigawolf", "random"]#,"manipulator-bully","manipulator-gf" "S++_simp", "S", "fp","br1"]
     
@@ -84,11 +84,11 @@ def main():
       df[col] = split_string_column(df[col]) # Apply the split function to each metric column (in order to create as many rows as iterations)
    
     expanded_df = expand_dataframe(df,iterationsTot)
-    expanded_df.to_csv('records_test.csv', index=False)
+    expanded_df.to_csv('records_10-exp3w++_25_30iter.csv', index=False)
 
     # Save the accumulated edge data to a CSV file
     edge_df = pd.DataFrame(all_edge_data)
-    edge_df.to_csv('edge_data_test.csv', index=False)
+    edge_df.to_csv('edge_data_10-exp3w++_25_30iter.csv', index=False)
 
     # # plot_all_tipping_points(all_tipping_points)
     # plot_all_results(results, iterationsTot,num_networks)

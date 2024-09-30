@@ -11,15 +11,23 @@ import warnings
 
 
 
-def run_network_analysis(num_agents, skill_type, num_networks=5, iterationsTot=20):
+def run_network_analysis(num_agents, skill_type, num_networks, iterationsTot):
        
     start_time = time.time()
     proximity_factor = 0.1  # proximity factor defined here
-    all_defections = []
-    all_coops = []
-    all_tipping_points = []
     pad_value = 0 # pad value to fill in absent values in degree histogram to make the lists homogeneous
+    
+    all_defections = []
+    all_coops = []  # nodes cooperations
+    all_tipping_points = []    
     all_edge_data = []  # To collect edge data
+    
+    all_edge_cooperations = {}  # edges cooperations
+    all_edge_counts = []  # edge counts (how many interactions)
+    all_cooperation_counts = {} # edge cooperations (both nodes cooperate)
+    all_interaction_counts = {} 
+    all_reputation = {}
+    
 
     configuration = {
         "nodes": {skill_type: num_agents},
@@ -44,8 +52,14 @@ def run_network_analysis(num_agents, skill_type, num_networks=5, iterationsTot=2
     for run in range(num_networks):
         
         affinities = []
-        defections = []
-        coops = []
+        defections = {}
+        coops = {}
+        interaction_counts = {}  # changed
+        cooperation_counts = {}  # changed
+        reputation = {}          # changed
+        edge_cooperations = {}       # changed
+        edge_counts = []       # changed
+
         tipping_points = []
         interactions = []
         metrics = {
@@ -61,9 +75,10 @@ def run_network_analysis(num_agents, skill_type, num_networks=5, iterationsTot=2
             "conneceted_nodes": []
         }
 
+      
         print(f'NETWORK {run + 1}/{num_networks}')
         G = configuraRed(configuration)
-        pos = nx.get_node_attributes(G, 'pos')    
+        # pos = nx.get_node_attributes(G, 'pos')    
         # generateImage(G, 0, pos)
 
         for iter in range(0, iterationsTot):
@@ -71,13 +86,23 @@ def run_network_analysis(num_agents, skill_type, num_networks=5, iterationsTot=2
             print('NETWORKLOOP, iteration', iter)
             
             # prev_pos = copy.deepcopy(nx.get_node_attributes(G, 'pos'))
-            aff, defect, cooperaciones,cooperations = evaluaRed(G)  #inter, 
-            defections.append(defect)
-            coops.append(cooperaciones)
+            aff, defect, cooperaciones,edge_cooperations, reputacion, inter_counts, coop_counts = evaluaRed(G, interaction_counts, 
+                                                                                                            cooperation_counts, reputation, 
+                                                                                                            defections, coops, edge_cooperations)  #inter, 
+
+               
             affinities.append(aff)
+            defections.update(defect) 
+            coops.update(cooperaciones) 
+            interaction_counts.update(inter_counts)   # changed
+            cooperation_counts.update(coop_counts)   # changed
+            edge_cooperations.update(edge_cooperations)  # changed
+            reputation.update(reputacion)           # changed
+            edge_counts.append(G.number_of_edges)   
             # interactions.append(inter)
             
-            G  = reajustaRed(G, iterationsTot, cooperations, proximity_factor) #
+            G  = reajustaRed(G, iterationsTot, edge_cooperations, proximity_factor, reputation) #
+            
             # pos = nx.get_node_attributes(G, 'pos')
             # generateImage(G, iter + 1, pos, prev_pos)
         
@@ -150,7 +175,7 @@ def run_network_analysis(num_agents, skill_type, num_networks=5, iterationsTot=2
 
             metrics["degree_distribution"].append([d for n, d in G.degree()])
             metrics["degree_histogram"].append(nx.degree_histogram(G))
-            metrics["cooperation_proportion"].append(measure_cooperation(cooperations, G))
+            metrics["cooperation_proportion"].append(measure_cooperation(edge_cooperations, G))
             metrics["clustering_coefficient"].append(nx.average_clustering(G))
             metrics["assortativity"].append(assortativity)
             metrics["modularity"].append(modularity)
@@ -158,7 +183,7 @@ def run_network_analysis(num_agents, skill_type, num_networks=5, iterationsTot=2
             metrics["edge_weight"].append(edge_weights)
             # metrics["conneceted_nodes"].append(conneceted_nodes)
             
-
+            # FOR PROSPECTIVE TIPPING POINTS
             coop_proportion = metrics["cooperation_proportion"]
             network_tipping_points = detect_tipping_points(coop_proportion)
             tipping_points.extend([(num_agents, skill_type, run, tp) for tp in network_tipping_points])
@@ -181,10 +206,19 @@ def run_network_analysis(num_agents, skill_type, num_networks=5, iterationsTot=2
 
         all_defections.append(defections)
         all_coops.append(coops)
-        all_metrics["graphs"].append(G)  # Collect the final graph of each run
+        all_reputation.update(reputation)    # changed
+        all_cooperation_counts.update(cooperation_counts)  # changed
+        all_interaction_counts.update(interaction_counts)  # changed
+        all_edge_cooperations.update(edge_cooperations)   # changed
+        all_edge_counts.append(edge_counts)
         
-        # elapsed_time = time.time() - start_time
-        # print(f"Elapsed time after {run + 1} iterations: {elapsed_time:.2f} seconds")
+
+
+        all_metrics["graphs"].append(G)  # Collect the final graph of each run
+
+        
+        elapsed_time = time.time() - start_time
+        print(f"Elapsed time after {run + 1} iterations: {elapsed_time:.2f} seconds")
         
             
     all_tipping_points.extend(tipping_points)  

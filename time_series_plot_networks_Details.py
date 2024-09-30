@@ -9,6 +9,7 @@ from statsmodels.formula.api import ols
 from statsmodels.stats.anova import anova_lm
 import statsmodels.formula.api as smf
 import statsmodels.api as sm
+from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 # from dummy_data import *
 # from dummy_data import generate_dummy_data
@@ -18,16 +19,36 @@ import statsmodels.api as sm
 
 def main():
 
-    # ANOVA 1
+    # # ANOVA 1
 
     # # ANOVA between the constrained model and the null modell
-    # df_constrained = pd.read_csv('records_test.csv')
-    # df_unconstrained = pd.read_csv('records_test2.csv')
+    # df_constrained = pd.read_csv('records_500_50_S++Asp.csv')
+    # df_unconstrained = pd.read_csv('records_500_50.csv')
     # df_constrained['type'] = 1
     # df_unconstrained['type'] = 0
     # df_combined = pd.concat([df_constrained, df_unconstrained], ignore_index=True)
+    # df_combined_cleaned = df_combined.replace([np.inf, -np.inf], np.nan)
+    # df_combined_cleaned = df_combined_cleaned.dropna()
 
-    # model = ols('cooperation_proportion ~ C(type)', data=df_combined).fit()
+    # has_infs = df_combined_cleaned.isin([np.inf, -np.inf]).sum().sum()
+    # print(f"Number of infinities in the DataFrame: {has_infs}")
+    # has_nans = df_combined_cleaned.isna().sum().sum()
+    # print(f"Number of NaNs in the DataFrame: {has_nans}")
+    # print(df_combined_cleaned['type'].unique())
+    # print(df_combined_cleaned['iteration'].unique())
+    # print(df_combined_cleaned.groupby(['type', 'iteration']).size())
+    # X = df_combined_cleaned[['type', 'iteration']]
+    # X.loc[:, 'interaction'] = X['type'] * X['iteration']  # Create interaction term manually
+    # # Add constant for VIF
+    # X = sm.add_constant(X)
+    # # Calculate VIF
+    # vif_data = pd.DataFrame()
+    # vif_data["feature"] = X.columns
+    # vif_data["VIF"] = [variance_inflation_factor(X.values, i) for i in range(X.shape[1])]
+    # print(vif_data)
+
+
+    # model = ols('cooperation_proportion ~ C(type) + C(iteration)', data=df_combined_cleaned).fit()
     # anova_table = anova_lm(model, typ=2)
     # print(anova_table)
 
@@ -40,37 +61,37 @@ def main():
     # plt.ylabel('Cooperation Proportion')
     # plt.show()
 
-    # ANOVA 2
+    # # ANOVA 2
 
-    df_unconstrained = pd.read_csv('results_test2.csv')
-    df_constrained = pd.read_csv('results_test.csv')
-    df_constrained['type'] = 1
-    df_unconstrained['type'] = 0
-    df_combined = pd.concat([df_constrained, df_unconstrained], ignore_index=True)
+    # df_unconstrained = pd.read_csv('results_test2.csv')
+    # df_constrained = pd.read_csv('results_test.csv')
+    # df_constrained['type'] = 1
+    # df_unconstrained['type'] = 0
+    # df_combined = pd.concat([df_constrained, df_unconstrained], ignore_index=True)
     
-    # Determine the number of stages
-    stage_count = df_combined['cooperation_proportion'].str.split(',').str.len().max()
+    # # Determine the number of stages
+    # stage_count = df_combined['cooperation_proportion'].str.split(',').str.len().max()
     
-    # Split variables data to create stages of time series (iterations)
-    # for column in ['clustering_coefficient', 'average_path_length', 'cooperation_proportion', 'density', 'assortativity', 'modularity']:
-    for column in ['clustering_coefficient', 'average_path_length', 'degree_distribution','degree_histogram','cooperation_proportion', 'density', 'assortativity', 'modularity','edge_weight']:
-        df = split_multistage_values(df_combined, column, stage_count)
+    # # Split variables data to create stages of time series (iterations)
+    # # for column in ['clustering_coefficient', 'average_path_length', 'cooperation_proportion', 'density', 'assortativity', 'modularity']:
+    # for column in ['clustering_coefficient', 'average_path_length', 'degree_distribution','degree_histogram','cooperation_proportion', 'density', 'assortativity', 'modularity','edge_weight']:
+    #     df = split_multistage_values(df_combined, column, stage_count)
 
-    df_melt = df_combined.melt(id_vars=['type'], 
-                               value_vars=[f'cooperation_proportion_stage_{i+1}' for i in range(stage_count)],
-                               var_name='stage', value_name='cooperation_proportion')
-
-
-
-    # Fit the two-way ANOVA model
-    model = smf.ols('cooperation_proportion ~ C(type) + C(stage) + C(type):C(stage)', data=df_melt).fit()
-    anova_table = sm.stats.anova_lm(model, typ=2)
-    print(anova_table)
+    # df_melt = df_combined.melt(id_vars=['type'], 
+    #                            value_vars=[f'cooperation_proportion_stage_{i+1}' for i in range(stage_count)],
+    #                            var_name='stage', value_name='cooperation_proportion')
 
 
-"""
+
+    # # Fit the two-way ANOVA model
+    # model = smf.ols('cooperation_proportion ~ C(type) + C(stage) + C(type):C(stage)', data=df_melt).fit()
+    # anova_table = sm.stats.anova_lm(model, typ=2)
+    # print(anova_table)
+
+
+
     # expanded_df = pd.read_csv('records3.csv')
-    expanded_df = pd.read_csv('records_500_50_several.csv')
+    expanded_df = pd.read_csv('records_500_50_S++Asp.csv')
 
     iterationsTot = expanded_df['iteration'].nunique()
     skill_types = expanded_df['skill_type'].unique()
@@ -93,6 +114,7 @@ def main():
     plot_all_combinations(expanded_df, 'clustering_coefficient', stage1, stage2, stage3,skill_types, num_agents_list)
     plot_all_combinations(expanded_df, 'average_path_length', stage1, stage2, stage3,skill_types, num_agents_list)
     plot_all_combinations(expanded_df, 'density', stage1, stage2, stage3,skill_types, num_agents_list)
+    plot_all_combinations(expanded_df, 'modularity', stage1, stage2, stage3,skill_types, num_agents_list)
     
     # # Plot for each number of agents
     # for num_agent in num_agents_list:
@@ -138,7 +160,7 @@ def main():
     # df_melt, tipping_points_df = identify_tipping_points(df,iterationsTot)
     # plot_skill_vs_agents(expanded_df)
     plot_skill_vs_agents_scatter(expanded_df) 
-    plot_skill_vs_agents_heatmap(expanded_df) """
+    plot_skill_vs_agents_heatmap(expanded_df) 
     
 
     
